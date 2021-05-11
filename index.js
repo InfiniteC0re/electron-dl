@@ -89,7 +89,7 @@ function registerListener(session, options, callback = () => {}) {
 			options.onStarted(item);
 		}
 
-		item.on('updated', () => {
+		item.on('updated', (e, state) => {
 			receivedBytes = completedBytes;
 			for (const item of downloadItems) {
 				receivedBytes += item.getReceivedBytes();
@@ -110,7 +110,8 @@ function registerListener(session, options, callback = () => {}) {
 				options.onProgress({
 					percent: itemTotalBytes ? itemTransferredBytes / itemTotalBytes : 0,
 					transferredBytes: itemTransferredBytes,
-					totalBytes: itemTotalBytes
+					totalBytes: itemTotalBytes,
+					state
 				});
 			}
 
@@ -118,7 +119,8 @@ function registerListener(session, options, callback = () => {}) {
 				options.onTotalProgress({
 					percent: progressDownloadItems(),
 					transferredBytes: receivedBytes,
-					totalBytes
+					totalBytes,
+					state
 				});
 			}
 		});
