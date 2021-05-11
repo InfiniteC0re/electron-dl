@@ -90,6 +90,13 @@ function registerListener(session, options, callback = () => {}) {
 		}
 
 		item.on('updated', (e, state) => {
+			if (state == "interrupted") {
+				item.cancel();
+				return;
+			}
+
+			console.log(Object.keys(item))
+
 			receivedBytes = completedBytes;
 			for (const item of downloadItems) {
 				receivedBytes += item.getReceivedBytes();
@@ -111,7 +118,7 @@ function registerListener(session, options, callback = () => {}) {
 					percent: itemTotalBytes ? itemTransferredBytes / itemTotalBytes : 0,
 					transferredBytes: itemTransferredBytes,
 					totalBytes: itemTotalBytes,
-					state
+					state,
 				});
 			}
 
@@ -120,7 +127,7 @@ function registerListener(session, options, callback = () => {}) {
 					percent: progressDownloadItems(),
 					transferredBytes: receivedBytes,
 					totalBytes,
-					state
+					state,
 				});
 			}
 		});
@@ -149,8 +156,9 @@ function registerListener(session, options, callback = () => {}) {
 					options.onCancel(item);
 				}
 			} else if (state === 'interrupted') {
-				const message = pupa(errorMessage, {filename: path.basename(filePath)});
-				callback(new Error(message));
+				if (typeof options.onCancel === 'function') {
+					options.onCancel(item);
+				}
 			} else if (state === 'completed') {
 				if (process.platform === 'darwin') {
 					app.dock.downloadFinished(filePath);
