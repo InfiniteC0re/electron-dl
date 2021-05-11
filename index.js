@@ -95,8 +95,6 @@ function registerListener(session, options, callback = () => {}) {
 				return;
 			}
 
-			console.log(Object.keys(item))
-
 			receivedBytes = completedBytes;
 			for (const item of downloadItems) {
 				receivedBytes += item.getReceivedBytes();
