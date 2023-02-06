@@ -92,7 +92,9 @@ Note: Only use this option when strictly necessary. Downloading directly without
 Type: `string`\
 Default: [User's downloads directory](https://electronjs.org/docs/api/app/#appgetpathname)
 
-Directory to save the file in.
+The directory to save the file in.
+
+Must be an absolute path.
 
 #### filename
 
@@ -193,7 +195,32 @@ Reveal the downloaded file in the system file manager, and if possible, select t
 Type: `boolean`\
 Default: `true`
 
-Shows the file count badge on macOS/Linux dock icons when download is in progress.
+Show a file count badge on the macOS/Linux dock/taskbar icon when a download is in progress.
+
+#### showProgressBar
+
+Type: `boolean`\
+Default: `true`
+
+Show a progress bar on the dock/taskbar icon when a download is in progress.
+
+#### overwrite
+
+Type: `boolean`\
+Default: `false`
+
+Allow downloaded files to overwrite files with the same name in the directory they are saved to.
+
+The default behavior is to append a number to the filename.
+
+#### dialogOptions
+
+Type: [`SaveDialogOptions`](https://www.electronjs.org/docs/latest/api/download-item#downloaditemsetsavedialogoptionsoptions)\
+Default: `{}`
+
+Customize the save dialog.
+
+If `defaultPath` is not explicity defined, a default value is assigned based on the file path.
 
 ## Development
 

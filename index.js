@@ -17,7 +17,7 @@ const getFilenameFromMime = (name, mime) => {
 
 const majorElectronVersion = () => {
 	const version = process.versions.electron.split('.');
-	return parseInt(version[0], 10);
+	return Number.parseInt(version[0], 10);
 };
 
 const getWindowFromBrowserView = webContents => {
@@ -58,6 +58,7 @@ function registerListener(session, options, callback = () => {}) {
 
 	options = {
 		showBadge: true,
+		showProgressBar: true,
 		...options
 	};
 
@@ -67,20 +68,26 @@ function registerListener(session, options, callback = () => {}) {
 
 		const window_ = majorElectronVersion() >= 12 ? BrowserWindow.fromWebContents(webContents) : getWindowFromWebContents(webContents);
 
+		if (options.directory && !path.isAbsolute(options.directory)) {
+			throw new Error('The `directory` option must be an absolute path');
+		}
+
 		const directory = options.directory || app.getPath('downloads');
+
 		let filePath;
 		if (options.filename) {
 			filePath = path.join(directory, options.filename);
 		} else {
 			const filename = item.getFilename();
 			const name = path.extname(filename) ? filename : getFilenameFromMime(filename, item.getMimeType());
-			filePath = unusedFilename.sync(path.join(directory, name));
+
+			filePath = options.overwrite ? path.join(directory, name) : unusedFilename.sync(path.join(directory, name));
 		}
 
 		const errorMessage = options.errorMessage || 'The download of {filename} was interrupted';
 
 		if (options.saveAs) {
-			item.setSaveDialogOptions({defaultPath: filePath});
+			item.setSaveDialogOptions({defaultPath: filePath, ...options.dialogOptions});
 		} else {
 			item.setSavePath(filePath);
 		}
@@ -104,7 +111,7 @@ function registerListener(session, options, callback = () => {}) {
 				app.badgeCount = activeDownloadItems();
 			}
 
-			if (!window_.isDestroyed()) {
+			if (!window_.isDestroyed() && options.showProgressBar) {
 				window_.setProgressBar(progressDownloadItems());
 			}
 
@@ -149,6 +156,7 @@ function registerListener(session, options, callback = () => {}) {
 				session.removeListener('will-download', listener);
 			}
 
+			// eslint-disable-next-line unicorn/prefer-switch
 			if (state === 'cancelled') {
 				if (typeof options.onCancel === 'function') {
 					options.onCancel(item);
@@ -158,18 +166,21 @@ function registerListener(session, options, callback = () => {}) {
 					options.onCancel(item);
 				}
 			} else if (state === 'completed') {
+				const savePath = item.getSavePath();
+
 				if (process.platform === 'darwin') {
-					app.dock.downloadFinished(filePath);
+					app.dock.downloadFinished(savePath);
 				}
 
 				if (options.openFolderWhenDone) {
-					shell.showItemInFolder(filePath);
+					shell.showItemInFolder(savePath);
 				}
 
 				if (typeof options.onCompleted === 'function') {
 					options.onCompleted({
-						fileName: item.getFilename(),
-						path: item.getSavePath(),
+						fileName: item.getFilename(), // Just for backwards compatibility. TODO: Remove in the next major version.
+						filename: item.getFilename(),
+						path: savePath,
 						fileSize: item.getReceivedBytes(),
 						mimeType: item.getMimeType(),
 						url: item.getURL()

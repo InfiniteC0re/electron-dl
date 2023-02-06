@@ -1,4 +1,4 @@
-import {BrowserView, BrowserWindow, DownloadItem} from 'electron';
+import {BrowserView, BrowserWindow, DownloadItem, SaveDialogOptions} from 'electron';
 
 declare namespace electronDl {
 	interface Progress {
@@ -6,13 +6,13 @@ declare namespace electronDl {
 		transferredBytes: number;
 		totalBytes: number;
 	}
-	
+
 	interface File {
-		filename: string,
-		path: string,
-		fileSize: number,
-		mimeType: string,
-		url: string
+		filename: string;
+		path: string;
+		fileSize: number;
+		mimeType: string;
+		url: string;
 	}
 
 	interface Options {
@@ -26,7 +26,9 @@ declare namespace electronDl {
 		readonly saveAs?: boolean;
 
 		/**
-		Directory to save the file in.
+		The directory to save the file in.
+
+		Must be an absolute path.
 
 		Default: [User's downloads directory](https://electronjs.org/docs/api/app/#appgetpathname)
 		*/
@@ -68,10 +70,10 @@ declare namespace electronDl {
 		Optional callback that receives an object containing information about the progress of the current download item.
 		*/
 		readonly onProgress?: (progress: Progress) => void;
-		
+
 		/**
 		Optional callback that receives an object containing information about the combined progress of all download items done within any registered window.
-		
+
 		Each time a new download is started, the next callback will include it. The progress percentage could therefore become smaller again.
 		This callback provides the same data that is used for the progress bar on the app icon.
 		*/
@@ -81,7 +83,7 @@ declare namespace electronDl {
 		Optional callback that receives the [download item](https://electronjs.org/docs/api/download-item) for which the download has been cancelled.
 		*/
 		readonly onCancel?: (item: DownloadItem) => void;
-		
+
 		/**
 		Optional callback that receives an object with information about an item that has been completed. It is called for each completed item.
 		*/
@@ -95,14 +97,40 @@ declare namespace electronDl {
 		readonly openFolderWhenDone?: boolean;
 
 		/**
-		Shows the file count badge on macOS/Linux dock icons when download is in progress.
+		Show a file count badge on the macOS/Linux dock/taskbar icon when a download is in progress.
 
 		@default true
 		*/
 		readonly showBadge?: boolean;
+
+		/**
+		Show a progress bar on the dock/taskbar icon when a download is in progress.
+
+		@default true
+		*/
+		readonly showProgressBar?: boolean;
+
+		/**
+		Allow downloaded files to overwrite files with the same name in the directory they are saved to.
+
+		The default behavior is to append a number to the filename.
+
+		@default false
+		*/
+		readonly overwrite?: boolean;
+
+		/**
+		Customize the save dialog.
+
+		If `defaultPath` is not explicity defined, a default value is assigned based on the file path.
+
+		@default {}
+		*/
+		readonly dialogOptions?: SaveDialogOptions;
 	}
 }
 
+// eslint-disable-next-line no-redeclare
 declare const electronDl: {
 	/**
 	Register the helper for all windows.
